@@ -1,0 +1,16 @@
+CC = gcc
+CFLAGS = -I../include -Wall -Werror -DDEBUG -lcunit
+SRC = alu_decoder_tests.c macro_tests.c selector_tests.c test_runner.c ../src/decoder.c ../src/constants.c
+HEADERS = ../include/constants.h ../include/debug.h ../include/decoder.h ../include/constants.h
+TARGET = run_tests
+
+# Build the main project executable
+
+$(TARGET): $(SRC) $(HEADERS)
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS)
+
+clean:
+	rm -f $(TARGET)
+	$(MAKE) -C tests clean  # Calls the clean target in the tests directory
+
+# To run tests from the root directory
