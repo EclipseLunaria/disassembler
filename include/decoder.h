@@ -1,9 +1,9 @@
 #ifndef DECODER_H
 #define DECODER_H
-#include <stdint.h>
-#include <string.h>
 
 #include "constants.h"
+#include "core.h"
+#include "shift_ops.h"
 
 typedef int (*decoder_t)(uint32_t, char*);
 typedef uint8_t flag_t;
@@ -33,13 +33,14 @@ int decode_instruction(uint32_t instruction);
 decoder_t select_decoder(uint32_t instruction);
 
 int decode_multiply(uint32_t instruction, char* buffer);
+int decode_alu_operation(uint32_t instruction, char* buffer);
+
 int decode_long_multiply(uint32_t instruction, char* buffer);
 int decode_branch_exchange(uint32_t instruction, char* buffer);
 int decode_swap(uint32_t instruction, char* buffer);
 int decode_halfword_register_transfer(uint32_t instruction, char* buffer);
 int decode_halfword_immediate_transfer(uint32_t instruction, char* buffer);
 int decode_signed_data_transfer(uint32_t instruction, char* buffer);
-int decode_alu_operation(uint32_t instruction, char* buffer);
 int decode_load_store_data_ubyte(uint32_t instruction, char* buffer);
 int decode_undefined(uint32_t instruction, char* buffer);
 int decode_block_data_transfer(uint32_t instruction, char* buffer);

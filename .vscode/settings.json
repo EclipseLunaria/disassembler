@@ -1,12 +1,18 @@
 {
     "editor.formatOnSave": true,
     "files.associations": {
+        "*.ejs": "html",
         "decoder.h": "c",
         "cstdlib": "c",
         "basic.h": "c",
         "test_macros.h": "c",
         "cunit.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "constants.h": "c",
+        "types.h": "c",
+        "shift_ops.h": "c",
+        "nl_types.h": "c",
+        "core.h": "c"
     },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
