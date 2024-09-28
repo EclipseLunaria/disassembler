@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "core.h"
+#include "instruction_builder.h"
 #include "shift_ops.h"
 
 typedef int (*decoder_t)(uint32_t, char*);

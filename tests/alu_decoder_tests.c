@@ -96,5 +96,6 @@ int add_alu_decoder_tests() {
     ADD_TEST(test_decode_add_op_on_reg_no_shift)
     ADD_TEST(test_decode_sub_op_on_imm_no_shift)
     ADD_TEST(test_decode_mov_imm_value)
+
     return CUE_SUCCESS;
 }

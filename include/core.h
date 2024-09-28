@@ -16,6 +16,7 @@ typedef uint8_t reg_t;
 typedef struct TokenBuilder {
     char tokens[8][16];
     int count;
+    char *mnemonic;
 
 } TokenBuilder;
 #endif
