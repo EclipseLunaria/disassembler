@@ -29,24 +29,26 @@ typedef uint8_t reg_t;
 #define IS_COPROCESSOR_DATA_OPERATION(x) (x & 0x0F000000) == 0x0F000000
 #define IS_COPROCESSOR_REGISTER_TRANSFER(x) (x & 0x0F000000) == 0x0F000000
 
-int decode_instruction(uint32_t instruction);
+int decode_instruction(uint32_t instruction, char* buffer);
 
 decoder_t select_decoder(uint32_t instruction);
 
-int decode_multiply(uint32_t instruction, char* buffer);
 int decode_alu_operation(uint32_t instruction, char* buffer);
 
+int decode_multiply(uint32_t instruction, char* buffer);
 int decode_long_multiply(uint32_t instruction, char* buffer);
+
 int decode_branch_exchange(uint32_t instruction, char* buffer);
+int decode_branch(uint32_t instruction, char* buffer);
 int decode_swap(uint32_t instruction, char* buffer);
+int decode_software_interrupt(uint32_t instruction, char* buffer);
+int decode_undefined(uint32_t instruction, char* buffer);
+
 int decode_halfword_register_transfer(uint32_t instruction, char* buffer);
 int decode_halfword_immediate_transfer(uint32_t instruction, char* buffer);
 int decode_signed_data_transfer(uint32_t instruction, char* buffer);
 int decode_load_store_data_ubyte(uint32_t instruction, char* buffer);
-int decode_undefined(uint32_t instruction, char* buffer);
 int decode_block_data_transfer(uint32_t instruction, char* buffer);
-int decode_branch(uint32_t instruction, char* buffer);
-int decode_software_interrupt(uint32_t instruction, char* buffer);
 
 int decode_coprocessor_data_transfer(uint32_t instruction, char* buffer);
 int decode_coprocessor_data_operation(uint32_t instruction, char* buffer);

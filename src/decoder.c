@@ -1,14 +1,54 @@
 #include "decoder.h"
 
+int decode_instruction(uint32_t instruction, char* buffer) {
+    decoder_t decoder = select_decoder(instruction);
+
+    if (!decoder) {
+        strcpy(buffer, "UNKNOWN");
+        return -1;
+    }
+
+    decoder(instruction, buffer);
+    return 0;
+}
+
 decoder_t select_decoder(uint32_t instruction) {
     if (IS_MULTIPLY(instruction)) {
         return decode_multiply;
     }
+    if (IS_LONG_MULTIPLY(instruction)) {
+        return decode_long_multiply;
+    }
+    if (IS_BRANCH_EXCHANGE(instruction)) {
+        return decode_branch_exchange;
+    }
+    if (IS_SWAP(instruction)) {
+        return decode_swap;
+    }
+    // if (IS_HALFWORD_REGISTER_TRANSFER(instruction)) {
+    // }
+    // if (IS_HALFWORD_IMMEDIATE_TRANSFER(instruction)) {
+    // }
+    // if (IS_SIGNED_DATA_TRANSFER(instruction)) {
+    // }
     if (IS_ALU_OPERTAION(instruction)) {
         return decode_alu_operation;
     }
+    // if (IS_LOAD_STORE_REGISTER_UBYTE(instruction)) {
+    // }
+    if (IS_UNDEFINED(instruction)) {
+        return decode_undefined;
+    }
+    // if (IS_BLOCK_DATA_TRANSFER(instruction)) {
+    // }
+    if (IS_BRANCH(instruction)) {
+        return decode_branch;
+    }
+    if (IS_SOFTWARE_INTERRUPT(instruction)) {
+        decode_software_interrupt;
+    }
 
-    return 0;
+    return NULL;
 }
 
 int decode_multiply(uint32_t instruction, char* buffer) {
@@ -134,4 +174,82 @@ int decode_alu_operation(uint32_t instruction, char* buffer) {
     build_instruction(&builder, buffer);
 
     return 0;
+}
+
+// Needs Testing
+
+int decode_branch_exchange(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    uint8_t cond = (instruction >> 28) & 0xFF;
+    reg_t rn = instruction & 0xF;
+
+    char mnemonic_buffer[16];
+    memset(mnemonic_buffer, 0, 16);
+    strcat(mnemonic_buffer, "BX");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    append_register(&builder, rn);
+    build_instruction(&builder, buffer);
+}
+
+int decode_branch(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    uint8_t cond = (instruction >> 28) & 0xFF;
+    uint8_t L = (instruction >> 28) & 0xFF;
+    uint32_t shift = instruction & 0xFFFF;
+
+    char mnemonic_buffer[16];
+    memset(mnemonic_buffer, 0, 16);
+    strcat(mnemonic_buffer, "B");
+    strcat(mnemonic_buffer, L ? "L" : "");
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    // needs to test sign maybe needs extenstion
+    append_immediate(&builder, shift);
+    build_instruction(&builder, buffer);
+}
+
+int decode_swap(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    uint8_t cond = (instruction >> 28) & 0xFF;
+    flag_t B = (instruction >> 22) & 1;
+    reg_t rn = (instruction >> 16) & 0xF;
+    reg_t rd = (instruction >> 12) & 0xF;
+    reg_t rm = instruction & 0xF;
+
+    char mnemonic_buffer[16];
+    memset(mnemonic_buffer, 0, 16);
+    strcat(mnemonic_buffer, "SWP");
+    strcat(mnemonic_buffer, B ? "B" : "");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    append_register(&builder, rd);
+    append_register(&builder, rm);
+
+    // possibly break this down into a method
+    char b[16];
+    memset(b, 0, 16);
+    sprintf(b, "[%d]", rn);
+    append_token(&builder, b);
+
+    build_instruction(&builder, buffer);
+}
+
+int decode_software_interrupt(uint32_t instruction, char* buffer) {
+    strcat(buffer, "SWI");
+}
+
+int decode_undefined(uint32_t instruction, char* buffer) {
+    strcat(buffer, "<Undefined>");
 }
