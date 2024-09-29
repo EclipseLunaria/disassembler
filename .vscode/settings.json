@@ -12,7 +12,8 @@
         "types.h": "c",
         "shift_ops.h": "c",
         "nl_types.h": "c",
-        "core.h": "c"
+        "core.h": "c",
+        "instruction_builder.h": "c"
     },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"

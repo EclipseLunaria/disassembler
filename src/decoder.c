@@ -45,7 +45,7 @@ decoder_t select_decoder(uint32_t instruction) {
         return decode_branch;
     }
     if (IS_SOFTWARE_INTERRUPT(instruction)) {
-        decode_software_interrupt;
+        return decode_software_interrupt;
     }
 
     return NULL;
@@ -194,6 +194,7 @@ int decode_branch_exchange(uint32_t instruction, char* buffer) {
 
     append_register(&builder, rn);
     build_instruction(&builder, buffer);
+    return 0;
 }
 
 int decode_branch(uint32_t instruction, char* buffer) {
@@ -208,12 +209,14 @@ int decode_branch(uint32_t instruction, char* buffer) {
     memset(mnemonic_buffer, 0, 16);
     strcat(mnemonic_buffer, "B");
     strcat(mnemonic_buffer, L ? "L" : "");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
     strcat(mnemonic_buffer, " ");
     append_token(&builder, mnemonic_buffer);
 
     // needs to test sign maybe needs extenstion
     append_immediate(&builder, shift);
     build_instruction(&builder, buffer);
+    return 0;
 }
 
 int decode_swap(uint32_t instruction, char* buffer) {
@@ -244,12 +247,15 @@ int decode_swap(uint32_t instruction, char* buffer) {
     append_token(&builder, b);
 
     build_instruction(&builder, buffer);
+    return 0;
 }
 
 int decode_software_interrupt(uint32_t instruction, char* buffer) {
     strcat(buffer, "SWI");
+    return 0;
 }
 
 int decode_undefined(uint32_t instruction, char* buffer) {
     strcat(buffer, "<Undefined>");
+    return 0;
 }
