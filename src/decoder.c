@@ -200,7 +200,7 @@ int decode_branch_exchange(uint32_t instruction, char* buffer) {
 int decode_branch(uint32_t instruction, char* buffer) {
     TokenBuilder builder;
     create_token_builder(&builder);
-
+    uint8_t cond = (instruction >> 28) & 0xF;
     uint8_t L = (instruction >> 28) & 0xFF;
     uint32_t shift = instruction & 0xFFFF;
 
@@ -208,6 +208,7 @@ int decode_branch(uint32_t instruction, char* buffer) {
     memset(mnemonic_buffer, 0, 16);
     strcat(mnemonic_buffer, "B");
     strcat(mnemonic_buffer, L ? "L" : "");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
     strcat(mnemonic_buffer, " ");
     append_token(&builder, mnemonic_buffer);
 
@@ -289,8 +290,8 @@ int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
         } else {
             reg_t rm = offset & 0xF;
             uint32_t imm = (offset >> 4) & 0xFF;
-            //handle shift op
-            
+            // handle shift op
+
             strcat(address_buffer, ", R");
         }
         strcat(address_buffer, "]");
