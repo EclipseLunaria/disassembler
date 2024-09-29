@@ -52,3 +52,7 @@ int build_instruction(TokenBuilder* b, char* buffer) {
     }
     return 0;
 }
+
+int build_shift(uint32_t shft_expr, char* s) {
+    reg_t rm = shft_expr & 0xF;
+}

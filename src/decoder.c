@@ -3,7 +3,7 @@
 int decode_instruction(uint32_t instruction, char* buffer) {
     decoder_t decoder = select_decoder(instruction);
 
-    if (!decoder) {
+    if (((instruction >> 28) & 0xF) == 0xF || !decoder) {
         strcpy(buffer, "UNKNOWN");
         return -1;
     }
@@ -45,7 +45,7 @@ decoder_t select_decoder(uint32_t instruction) {
         return decode_branch;
     }
     if (IS_SOFTWARE_INTERRUPT(instruction)) {
-        decode_software_interrupt;
+        return decode_software_interrupt;
     }
 
     return NULL;
@@ -194,13 +194,13 @@ int decode_branch_exchange(uint32_t instruction, char* buffer) {
 
     append_register(&builder, rn);
     build_instruction(&builder, buffer);
+    return 0;
 }
 
 int decode_branch(uint32_t instruction, char* buffer) {
     TokenBuilder builder;
     create_token_builder(&builder);
 
-    uint8_t cond = (instruction >> 28) & 0xFF;
     uint8_t L = (instruction >> 28) & 0xFF;
     uint32_t shift = instruction & 0xFFFF;
 
@@ -214,6 +214,7 @@ int decode_branch(uint32_t instruction, char* buffer) {
     // needs to test sign maybe needs extenstion
     append_immediate(&builder, shift);
     build_instruction(&builder, buffer);
+    return 0;
 }
 
 int decode_swap(uint32_t instruction, char* buffer) {
@@ -244,12 +245,67 @@ int decode_swap(uint32_t instruction, char* buffer) {
     append_token(&builder, b);
 
     build_instruction(&builder, buffer);
+    return 0;
+}
+
+// memory instructions
+
+int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
+    uint8_t cond = (instruction >> 28) & 0xF;
+    flag_t I = (instruction >> 25) & 1;
+    flag_t P = (instruction >> 24) & 1;
+    // flag_t U = (instruction >> 23) & 1;
+    flag_t B = (instruction >> 22) & 1;
+    flag_t W = (instruction >> 21) & 1;
+    flag_t L = (instruction >> 20) & 1;
+    reg_t rn = (instruction >> 16) & 0xF;
+    reg_t rd = (instruction >> 12) & 0xF;
+    uint32_t offset = instruction & 0xFFF;
+
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    char mnemonic_buffer[16];
+    memset(mnemonic_buffer, 0, 16);
+    strcat(mnemonic_buffer, L ? "LDR" : "STR");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, B ? "B" : "");
+    strcat(mnemonic_buffer, W && P ? "T" : "");
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    append_register(&builder, rd);
+
+    // build memory token
+    char address_buffer[64];
+    memset(address_buffer, 0, 64);
+    if (P) {
+        sprintf(address_buffer, "[R%d", rn);
+
+        if (I) {
+            if (offset) {
+                // <expression>
+            }
+        } else {
+            reg_t rm = offset & 0xF;
+            uint32_t imm = (offset >> 4) & 0xFF;
+            //handle shift op
+            
+            strcat(address_buffer, ", R");
+        }
+        strcat(address_buffer, "]");
+        strcat(address_buffer, offset && W ? "!" : "");
+    }
+    build_instruction(&builder, buffer);
+    return 0;
 }
 
 int decode_software_interrupt(uint32_t instruction, char* buffer) {
     strcat(buffer, "SWI");
+    return 0;
 }
 
 int decode_undefined(uint32_t instruction, char* buffer) {
     strcat(buffer, "<Undefined>");
+    return 0;
 }
