@@ -322,7 +322,6 @@ int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
 }
 
 int decode_block_data_transfer(uint32_t instruction, char* buffer) {
-    printf("current instruction: %x\n", instruction);
     TokenBuilder builder;
     create_token_builder(&builder);
 
@@ -358,6 +357,64 @@ int decode_block_data_transfer(uint32_t instruction, char* buffer) {
 
     build_instruction(&builder, buffer);
     return 0;
+}
+
+int decode_halfword_register_transfer(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+    uint8_t cond = instruction >> 28;
+    flag_t P = (instruction >> 24) & 1;
+    flag_t U = (instruction >> 23) & 1;
+    flag_t I = (instruction >> 22) & 1;
+    flag_t W = (instruction >> 21) & 1;
+    flag_t L = (instruction >> 20) & 1;
+    reg_t rn = (instruction >> 16) & 0xF;
+    reg_t rd = (instruction >> 12) & 0xF;
+    flag_t S = (instruction >> 6) & 1;
+    flag_t H = (instruction >> 5) & 1;
+    assert((S << 1 | H) & 0b11 != 0);
+    char mnemonic_buffer[1024];
+    memset(mnemonic_buffer, 0, 1024);
+    strcat(mnemonic_buffer, L ? "LDR" : "STR");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, S ? "S" : "");
+    strcat(mnemonic_buffer, H ? "H" : "B");
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    append_register(&builder, rd);
+
+    char rn_buffer[1024];
+    memset(rn_buffer, 0, 1024);
+
+    char address_buffer[1024];
+    memset(address_buffer, 0, 1024);
+    strcat(address_buffer, rn_buffer);
+
+    // build offset buffer
+    char offset_buffer[32];
+    memset(offset_buffer, 0, 32);
+    if (I) {
+        if (offset) {
+            sprintf(offset_buffer, "#%s0x%x", U ? "" : "-", offset);
+        }
+    } else {
+        build_reg_shift_token(offset, offset_buffer);
+        if (P) {
+
+            strcat(address_buffer, ", ");
+            strcat(address_buffer, U ? "" : "-");
+            printf("\nOFFSET BUFFER: %s\n", offset_buffer);
+            strcat(address_buffer, offset_buffer);
+        }
+    }
+
+    strcat(address_buffer, "]");
+    strcat(address_buffer, offset && W && P ? "!" : "");
+    append_token(&builder, address_buffer);
+
+    if (!P)
+        append_token(&builder, offset_buffer);
 }
 
 int decode_software_interrupt(uint32_t instruction, char* buffer) {

@@ -40,15 +40,15 @@ int decode_long_multiply(uint32_t instruction, char* buffer);
 
 int decode_branch_exchange(uint32_t instruction, char* buffer);
 int decode_branch(uint32_t instruction, char* buffer);
-int decode_swap(uint32_t instruction, char* buffer);
 int decode_software_interrupt(uint32_t instruction, char* buffer);
 int decode_undefined(uint32_t instruction, char* buffer);
-int decode_load_store_data_ubyte(uint32_t instruction, char* buffer);
 
 int decode_halfword_register_transfer(uint32_t instruction, char* buffer);
 int decode_halfword_immediate_transfer(uint32_t instruction, char* buffer);
 int decode_signed_data_transfer(uint32_t instruction, char* buffer);
+int decode_load_store_data_ubyte(uint32_t instruction, char* buffer);
 int decode_block_data_transfer(uint32_t instruction, char* buffer);
+int decode_swap(uint32_t instruction, char* buffer);
 
 int decode_coprocessor_data_transfer(uint32_t instruction, char* buffer);
 int decode_coprocessor_data_operation(uint32_t instruction, char* buffer);
