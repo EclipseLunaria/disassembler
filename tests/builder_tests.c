@@ -42,6 +42,43 @@ void test_build_register_shift_token() {
     CU_ASSERT_STRING_EQUAL(actual, "R5, ROR R2")
 }
 
+void test_build_register_list() {
+    uint16_t reg_list = 0xFF;
+    char actual[32];
+    memset(actual, 0, 32);
+    build_register_list(reg_list, actual);
+    printf("actual buffer: %s\n", actual);
+
+    CU_ASSERT_STRING_EQUAL(actual, "{R0-R7}")
+}
+void test_build_register_list_single_and_group() {
+    uint16_t reg_list = 0x2F;
+    char actual[32];
+    memset(actual, 0, 32);
+    build_register_list(reg_list, actual);
+    printf("actual buffer: %s\n", actual);
+
+    CU_ASSERT_STRING_EQUAL(actual, "{R0-R3, R5}")
+}
+void test_build_register_list_single_register() {
+    uint16_t reg_list = 0x2;
+    char actual[32];
+    memset(actual, 0, 32);
+    build_register_list(reg_list, actual);
+    printf("actual buffer: %s\n", actual);
+
+    CU_ASSERT_STRING_EQUAL(actual, "{R1}")
+}
+void test_build_register_list_split_register_groups() {
+    uint16_t reg_list = 0xF0F;
+    char actual[32];
+    memset(actual, 0, 32);
+    build_register_list(reg_list, actual);
+    printf("actual buffer: %s\n", actual);
+
+    CU_ASSERT_STRING_EQUAL(actual, "{R0-R3, R8-R11}")
+}
+
 int add_instruction_builder_tests() {
     CU_pSuite suite = CU_add_suite("Instruction Builder Tests", 0, 0);
 
@@ -51,6 +88,11 @@ int add_instruction_builder_tests() {
     ADD_TEST(test_build_immediate_shift_token);
     ADD_TEST(test_build_immediate_shift_token_shift_value_zero);
     ADD_TEST(test_build_register_shift_token);
+
+    ADD_TEST(test_build_register_list_single_register);
+    ADD_TEST(test_build_register_list);
+    ADD_TEST(test_build_register_list_single_and_group);
+    ADD_TEST(test_build_register_list_split_register_groups);
 
     return CUE_SUCCESS;
 }

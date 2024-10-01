@@ -4,46 +4,7 @@
 #include "decoder.h"
 #include "test_macros.h"
 
-// void test_decode_store_writeback_adding_two_registers() {
-//     // STR R1,[R2,R4]!; Store R1 at R2 and write back R2+R4 to R2.
-//     char buffer[32];
-//     memset(buffer, 0, 32);
-//     uint32_t instruction;
-//     instruction = 0xE0010392;
-
-//     decode_multiply(instruction, buffer);
-//     printf("buf: %s\n", buffer);
-
-//     char* expected = "STR R1, [R2,R4]!";
-//     CU_ASSERT_EQUAL(strcmp(buffer, expected), 0)
-// }
-// void test_decode_store_at_second_register_writeback_sum() {
-//     // STR R1,[R2],R4; Store R1 at R2 and write back R2+R4 to R2.
-//     char buffer[32];
-//     memset(buffer, 0, 32);
-//     uint32_t instruction;
-//     instruction = 0xE0010392;
-
-//     decode_multiply(instruction, buffer);
-//     printf("buf: %s\n", buffer);
-
-//     char* expected = "STR R1, [R2], R4";
-//     CU_ASSERT_EQUAL(strcmp(buffer, expected), 0)
-// }
-// void test_decode_load_from_reg_with_immediate_offset_no_writeback() {
-//     // LDR R1,[R2,#16]  ; Load R1 from contents of R2+16, but don’t write back.
-//     char buffer[32];
-//     memset(buffer, 0, 32);
-//     uint32_t instruction;
-//     instruction = 0xE0010392;
-
-//     decode_multiply(instruction, buffer);
-//     printf("buf: %s\n", buffer);
-
-//     char* expected = "LDR R1, [R2, #16]";
-//     CU_ASSERT_EQUAL(strcmp(buffer, expected), 0)
-// }
-void test_decode_load_from_reg_no_offset() {
+void test_decode_store_from_reg_no_offset() {
     // LDR R1,[R2]  ; Load R1 from contents of R2+16, but don’t write back.
     char buffer[32];
     memset(buffer, 0, 32);
@@ -52,37 +13,96 @@ void test_decode_load_from_reg_no_offset() {
 
     decode_load_store_data_ubyte(instruction, buffer);
     printf("buf: %s\n", buffer);
-
-    // char* expected = "LDR R1, [R2]";
-    // CU_ASSERT_EQUAL(strcmp(buffer, expected), 0)
+    CU_ASSERT_STRING_EQUAL(buffer, "STR R1, [R2]")
 }
-// void test_decode_multiply() {
-//     // LDR R1,[R2,R3,LSL#2]  Load R1 from contents of R2+R3*4.
-//     char buffer[32];
-//     memset(buffer, 0, 32);
-//     uint32_t instruction;
-//     instruction = 0xE0010392;
+void test_decode_load_preindex_reg_offset_lsr() {
+    // LDR R1,[R2,R3,LSL#2]  Load R1 from contents of R2+R3*4.
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0xE5921123;
 
-//     decode_multiply(instruction, buffer);
-//     printf("buf: %s\n", buffer);
+    decode_load_store_data_ubyte(instruction, buffer);
+    printf("buf: %s\n", buffer);
 
-//     char* expected = "LDR R1, [R2, R3, LSL #2]";
-//     CU_ASSERT_EQUAL(strcmp(buffer, expected), 0)
-// }
-// void test_decode_multiply() {
-//     // LDREQBR1,[R6,#5]; Conditionally load byte at R6+5 into R1 bits 0 to 7,
-//     // filling bits 8 to 31 with zeros.
-//     char buffer[32];
-//     memset(buffer, 0, 32);
-//     uint32_t instruction;
-//     instruction = 0xE0010392;
+    char* expected = "LDR R1, [R2, R3, LSR #2]";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+void test_decode_load_postindex_imm_offset() {
+    // LDR R1,[R2,R3,LSL#2]  Load R1 from contents of R2+R3*4.
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0xE6921123;
 
-//     decode_multiply(instruction, buffer);
-//     printf("buf: %s\n", buffer);
+    decode_load_store_data_ubyte(instruction, buffer);
+    printf("buf: %s\n", buffer);
 
-//     char* expected = "LDREQBR1, [R6, #5]";
-//     CU_ASSERT_EQUAL(strcmp(buffer, expected), 0)
-// }
+    char* expected = "LDR R1, [R2], #0x123";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+void test_decode_load_preindex_reg_offset_lsr_with_writeback() {
+    // LDR R1,[R2,R3,LSL#2]  Load R1 from contents of R2+R3*4.
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0xE5B21123;
+
+    decode_load_store_data_ubyte(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "LDR R1, [R2, R3, LSR #2]!";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+void test_decode_load_negative_preindex_reg_offset_lsr() {
+    // LDR R1,[R2,R3,LSL#2]  Load R1 from contents of R2+R3*4.
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0xE5121123;
+
+    decode_load_store_data_ubyte(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "LDR R1, [R2, -R3, LSR #2]";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+
+void test_decode_block_store_all_registers() {
+    // STMIA R0,{R0-R15}; save all registers
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0xE880FFFF;
+
+    decode_block_data_transfer(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "STMIA R0, {R0-R15}";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+
+void test_decode_block_store_all_registers_with_writeback_and_psr() {
+    // STMIA R0,{R0-R15}; save all registers
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0xE8E0FFFF;
+
+    decode_block_data_transfer(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "STMIA R0!, {R0-R15}^";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+
+void test_block_transfer_without_stack_smash() {
+    // LDMDAEQ R1!, {R0-R1, R3-R4, R6-R7, R9-R10, R12-R13, PC}
+    char buffer[1024];
+    memset(buffer, 0, 1024);
+    uint32_t instruction = 0x0831b6db;
+    decode_block_data_transfer(instruction, buffer);
+}
 
 int add_memory_decoding_tests() {
     CU_pSuite suite = CU_add_suite("Memory Transfer Decoding Tests", 0, 0);
@@ -90,6 +110,14 @@ int add_memory_decoding_tests() {
     if (suite == NULL)
         return CU_get_error();
 
-    ADD_TEST(test_decode_load_from_reg_no_offset)
+    ADD_TEST(test_decode_store_from_reg_no_offset)
+    ADD_TEST(test_decode_load_preindex_reg_offset_lsr)
+    ADD_TEST(test_decode_load_preindex_reg_offset_lsr_with_writeback)
+    ADD_TEST(test_decode_load_negative_preindex_reg_offset_lsr)
+    ADD_TEST(test_decode_load_postindex_imm_offset)
+    ADD_TEST(test_decode_block_store_all_registers)
+    ADD_TEST(test_decode_block_store_all_registers_with_writeback_and_psr)
+    ADD_TEST(test_block_transfer_without_stack_smash)
+
     return CUE_SUCCESS;
 }

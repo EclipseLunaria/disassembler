@@ -34,13 +34,15 @@ decoder_t select_decoder(uint32_t instruction) {
     if (IS_ALU_OPERTAION(instruction)) {
         return decode_alu_operation;
     }
-    // if (IS_LOAD_STORE_REGISTER_UBYTE(instruction)) {
-    // }
+    if (IS_LOAD_STORE_REGISTER_UBYTE(instruction)) {
+        return decode_load_store_data_ubyte;
+    }
     if (IS_UNDEFINED(instruction)) {
         return decode_undefined;
     }
-    // if (IS_BLOCK_DATA_TRANSFER(instruction)) {
-    // }
+    if (IS_BLOCK_DATA_TRANSFER(instruction)) {
+        return decode_block_data_transfer;
+    }
     if (IS_BRANCH(instruction)) {
         return decode_branch;
     }
@@ -252,10 +254,11 @@ int decode_swap(uint32_t instruction, char* buffer) {
 // memory instructions
 
 int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
+    // extract parameters
     uint8_t cond = (instruction >> 28) & 0xF;
     flag_t I = (instruction >> 25) & 1;
     flag_t P = (instruction >> 24) & 1;
-    // flag_t U = (instruction >> 23) & 1;
+    flag_t U = (instruction >> 23) & 1;
     flag_t B = (instruction >> 22) & 1;
     flag_t W = (instruction >> 21) & 1;
     flag_t L = (instruction >> 20) & 1;
@@ -265,13 +268,13 @@ int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
 
     TokenBuilder builder;
     create_token_builder(&builder);
-
+    // build mnemonic
     char mnemonic_buffer[16];
     memset(mnemonic_buffer, 0, 16);
     strcat(mnemonic_buffer, L ? "LDR" : "STR");
     strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
     strcat(mnemonic_buffer, B ? "B" : "");
-    strcat(mnemonic_buffer, W && P ? "T" : "");
+    strcat(mnemonic_buffer, W && !P ? "T" : "");
     strcat(mnemonic_buffer, " ");
     append_token(&builder, mnemonic_buffer);
 
@@ -280,23 +283,79 @@ int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
     // build memory token
     char address_buffer[64];
     memset(address_buffer, 0, 64);
-    if (P) {
-        sprintf(address_buffer, "[R%d", rn);
 
-        if (I) {
-            if (offset) {
-                // <expression>
-            }
-        } else {
-            reg_t rm = offset & 0xF;
-            uint32_t imm = (offset >> 4) & 0xFF;
-            // handle shift op
+    strcat(address_buffer, "[");
 
-            strcat(address_buffer, ", R");
+    // add rn register
+    char rn_buffer[16];
+    memset(rn_buffer, 0, 16);
+    build_register_token(rn, rn_buffer);
+    strcat(address_buffer, rn_buffer);
+
+    // build offset buffer
+    char offset_buffer[32];
+    memset(offset_buffer, 0, 32);
+    if (I) {
+        if (offset) {
+            sprintf(offset_buffer, "#%s0x%x", U ? "" : "-", offset);
         }
-        strcat(address_buffer, "]");
-        strcat(address_buffer, offset && W ? "!" : "");
+    } else {
+        build_reg_shift_token(offset, offset_buffer);
+        if (P) {
+
+            strcat(address_buffer, ", ");
+            strcat(address_buffer, U ? "" : "-");
+            printf("\nOFFSET BUFFER: %s\n", offset_buffer);
+            strcat(address_buffer, offset_buffer);
+        }
     }
+
+    strcat(address_buffer, "]");
+    strcat(address_buffer, offset && W && P ? "!" : "");
+    append_token(&builder, address_buffer);
+
+    if (!P)
+        append_token(&builder, offset_buffer);
+
+    build_instruction(&builder, buffer);
+    return 0;
+}
+
+int decode_block_data_transfer(uint32_t instruction, char* buffer) {
+    printf("current instruction: %x\n", instruction);
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    uint8_t cond = (instruction >> 28) & 0xF;
+    flag_t P = (instruction >> 24) & 1;
+    flag_t U = (instruction >> 23) & 1;
+    flag_t S = (instruction >> 22) & 1;
+    flag_t W = (instruction >> 21) & 1;
+    flag_t L = (instruction >> 20) & 1;
+    uint8_t transfer_type = L << 2 | P << 1 | U;
+    reg_t rn = (instruction >> 16) & 0xF;
+    uint16_t reg_list = instruction & 0xFFFF;
+    char mnemonic_buffer[1024];
+    memset(mnemonic_buffer, 0, 1024);
+    strcat(mnemonic_buffer,
+           rn == 14 ? STACK_BLOCK_SUFFIXS[transfer_type] : OTHER_BLOCK_SUFFIXS[transfer_type]);
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    // possibly break this down into a method
+    char reg_token[1024];
+    memset(reg_token, 0, 1024);
+    build_register_token(rn, reg_token);
+    strcat(reg_token, W ? "!" : "");
+    append_token(&builder, reg_token);
+    // build register list
+    char reg_list_buffer[1024];
+    memset(reg_list_buffer, 0, 1024);
+    build_register_list(reg_list, reg_list_buffer);
+    strcat(reg_list_buffer, S ? "^" : "");
+    append_token(&builder, reg_list_buffer);
+
     build_instruction(&builder, buffer);
     return 0;
 }

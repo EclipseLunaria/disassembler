@@ -8,3 +8,10 @@ char* COND_TYPE_STRS[] = {
 };
 
 char* SHIFT_OP_STRS[4] = {"LSL", "LSR", "ASR", "ROR"};
+
+char* STACK_BLOCK_SUFFIXS[8] = {
+    "STMED\0", "STMEA", "STMFD", "STMFA", "LDMFA", "LDMFD", "LDMEA", "LDMED",
+};
+char* OTHER_BLOCK_SUFFIXS[8] = {
+    "STMDA", "STMIA", "STMDB", "STMIB", "LDMDA", "LDMIA", "LDMDB", "LDMIB",
+};

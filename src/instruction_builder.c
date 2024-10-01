@@ -7,16 +7,21 @@ int create_token_builder(TokenBuilder* b) {
     return 0;
 }
 int build_instruction(TokenBuilder* b, char* buffer) {
-    for (int i = 0; i < b->count; i++) {
-        char join_buf[32];
-        memset(join_buf, 0, 16);
-        if (i != 0 && i != b->count - 1)
-            sprintf(join_buf, "%s, ", b->tokens[i]);
-        else
-            sprintf(join_buf, "%s", b->tokens[i]);
+    char instruction_buffer[1024];
+    memset(instruction_buffer, 0, 1024);
 
-        strcat(buffer, join_buf);
+    for (int i = 0; i < b->count; i++) {
+        char join_buf[1024];
+        memset(join_buf, 0, 1024);
+        if (i != 0 && i != b->count - 1) {
+            sprintf(join_buf, "%s, ", b->tokens[i]);
+        } else {
+
+            sprintf(join_buf, "%s", b->tokens[i]);
+        }
+        strcat(instruction_buffer, join_buf);
     }
+    strncpy(buffer, instruction_buffer, strlen(instruction_buffer));
     return 0;
 }
 
@@ -49,13 +54,14 @@ int append_immediate(TokenBuilder* b, uint32_t value) {
 }
 
 int build_register_token(reg_t r, char* s) {
-    if (r == 15)
-        sprintf(s, "%s", "PC");
+    if (r == 14) {
+        strcpy(s, "SP");
+    } else if (r == 15)
+        strcpy(s, "PC");
     else
         sprintf(s, "R%d", r);
     return 0;
 }
-
 
 int build_reg_shift_token(uint16_t shift_bits, char* s) {
     reg_t rm = shift_bits & 0xF;
@@ -87,5 +93,57 @@ int build_reg_shift_token(uint16_t shift_bits, char* s) {
     // build full shift token
     strcat(s, reg_token);
     strcat(s, shift_buffer);
+    return 0;
+}
+
+int combine_stack(reg_t* reg_stack, uint8_t* stk_length, char* s) {
+    if (!*stk_length) {
+        return 0;
+    }
+    if (*stk_length == 1) {
+        // build_register_token(reg_stack[0], s);
+        sprintf(s, "R%d", reg_stack[0]);
+    } else if (*stk_length > 1) {
+        char reg_buf[16];
+        memset(reg_buf, 0, 16);
+        sprintf(s, "R%d-R%d", reg_stack[0], reg_stack[*stk_length - 1]);
+    }
+    return 0;
+}
+
+int build_register_list(uint16_t reg_list, char* s) {
+    assert(s[0] == 0);
+    uint8_t reg_buf_size = 0;
+    char reg_list_buffers[32][32];
+    memset(reg_list_buffers, 0, sizeof(reg_list_buffers));
+    strcat(s, "{");
+    reg_t reg_stack[16];
+    uint8_t stack_length = 0;
+    for (int i = 0; i < 16; ++i) {
+        if ((reg_list >> i) & 1) {
+            reg_stack[stack_length] = i;
+            stack_length++;
+        } else {
+            if (!stack_length) {
+                continue;
+            }
+
+            combine_stack(reg_stack, &stack_length, reg_list_buffers[reg_buf_size]);
+            stack_length = 0;
+            reg_buf_size++;
+        }
+    }
+    if (stack_length) {
+        combine_stack(reg_stack, &stack_length, reg_list_buffers[reg_buf_size]);
+        reg_buf_size++;
+    }
+    for (int i = 0; i < reg_buf_size; i++) {
+        char join_buf[32];
+        memset(join_buf, 0, 16);
+        strcat(join_buf, i != 0 ? ", " : "");
+        strcat(join_buf, reg_list_buffers[i]);
+        strcat(s, join_buf);
+    }
+    strcat(s, "}");
     return 0;
 }
