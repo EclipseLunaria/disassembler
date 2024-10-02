@@ -1,4 +1,3 @@
-
 #include "instruction_builder.h"
 
 int create_token_builder(TokenBuilder* b) {
@@ -50,6 +49,43 @@ int append_immediate(TokenBuilder* b, uint32_t value) {
 
     sprintf(b->tokens[b->count], "#0x%x", value);
     b->count += 1;
+    return 0;
+}
+
+int append_address_token(TokenBuilder* builder, reg_t rn, uint16_t offset, OpFlags flags) {
+    char address_buffer[1024];
+    memset(address_buffer, 0, 1024);
+
+    strcat(address_buffer, "[");
+
+    char rn_buffer[1024];
+    memset(rn_buffer, 0, 1024);
+    build_register_token(rn, rn_buffer);
+    strcat(address_buffer, rn_buffer);
+    // build offset buffer
+    char offset_buffer[32];
+    memset(offset_buffer, 0, 32);
+    if (flags.I) {
+        if (offset) {
+            sprintf(offset_buffer, "#%s0x%x", flags.U ? "" : "-", offset);
+        }
+    } else {
+        build_reg_shift_token(offset, offset_buffer);
+        if (flags.P) {
+
+            strcat(address_buffer, ", ");
+            strcat(address_buffer, flags.U ? "" : "-");
+            printf("\nOFFSET BUFFER: %s\n", offset_buffer);
+            strcat(address_buffer, offset_buffer);
+        }
+    }
+
+    strcat(address_buffer, "]");
+    strcat(address_buffer, offset && flags.W && flags.P ? "!" : "");
+    append_token(builder, address_buffer);
+
+    if (!flags.P)
+        append_token(builder, offset_buffer);
     return 0;
 }
 

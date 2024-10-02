@@ -102,6 +102,35 @@ void test_block_transfer_without_stack_smash() {
     memset(buffer, 0, 1024);
     uint32_t instruction = 0x0831b6db;
     decode_block_data_transfer(instruction, buffer);
+    printf("buffer: %s\n", buffer);
+    CU_ASSERT_STRING_EQUAL(buffer, "LDMDAEQ R1!, {R0-R1, R3-R4, R6-R7, R9-R10, R12-R13, R15}")
+}
+
+void test_decode_load_halfword_down_reg_offset() {
+    // LDRH R1, [R2, -R3]
+    char buffer[1024];
+    memset(buffer, 0, 1024);
+    uint32_t instruction;
+    instruction = 0xE11210B3;
+
+    decode_halfword_transfer(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "LDRH R1, [R2, -R3]";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
+void test_decode_load_halfword_down_immediate_offset() {
+    // LDRSB R8, [R2], #-0x8f
+    char buffer[1024];
+    memset(buffer, 0, 1024);
+    uint32_t instruction;
+    instruction = 0xE0528DDF;
+
+    decode_halfword_transfer(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "LDRSB R8, [R2], #-0x8f";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
 }
 
 int add_memory_decoding_tests() {
@@ -118,6 +147,8 @@ int add_memory_decoding_tests() {
     ADD_TEST(test_decode_block_store_all_registers)
     ADD_TEST(test_decode_block_store_all_registers_with_writeback_and_psr)
     ADD_TEST(test_block_transfer_without_stack_smash)
+    ADD_TEST(test_decode_load_halfword_down_reg_offset)
+    ADD_TEST(test_decode_load_halfword_down_immediate_offset)
 
     return CUE_SUCCESS;
 }
