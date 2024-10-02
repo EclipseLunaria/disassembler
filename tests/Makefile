@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I../include -Wall -Werror -DDEBUG -lcunit
-SRC = alu_decoder_tests.c macro_tests.c builder_tests.c selector_tests.c multiply_decoding_tests.c memory_decoding_tests.c test_runner.c ../src/decoder.c ../src/constants.c ../src/shift_ops.c ../src/instruction_builder.c
+SRC = alu_decoder_tests.c macro_tests.c builder_tests.c psr_tests.c selector_tests.c multiply_decoding_tests.c memory_decoding_tests.c test_runner.c ../src/decoder.c ../src/constants.c ../src/shift_ops.c ../src/instruction_builder.c
 HEADERS = ../include/constants.h ../include/debug.h ../include/decoder.h ../include/constants.h ../include/shift_ops.h ../include/core.h ../include/instruction_builder.h
 TARGET = run_tests
 

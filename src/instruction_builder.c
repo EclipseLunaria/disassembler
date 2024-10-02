@@ -75,7 +75,6 @@ int append_address_token(TokenBuilder* builder, reg_t rn, uint16_t offset, OpFla
 
             strcat(address_buffer, ", ");
             strcat(address_buffer, flags.U ? "" : "-");
-            printf("\nOFFSET BUFFER: %s\n", offset_buffer);
             strcat(address_buffer, offset_buffer);
         }
     }

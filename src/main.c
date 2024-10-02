@@ -5,7 +5,7 @@
 #include "decoder.h"
 int main(int argc, char* argv[]) {
     uint32_t READ_START = 0;
-    size_t limit_write = 0xFFFFFF;
+    size_t limit_write = 0xFFFFFFF;
     char* outfile = "dump";
     printf("argc %d\n", argc);
     if (argc == 1) {
@@ -40,8 +40,8 @@ int main(int argc, char* argv[]) {
             char outline[256];
             memset(outline, 0, 256);
 
-            printf("%x:\t%x\t%s\n", address, buffer[i], ibuf);
-            fprintf(out, "%x:\t%x\t%s\n", address, buffer[i], ibuf);
+            if (buffer[i] != 0xFFFFFFFF)
+                fprintf(out, "%06x:\t\t%08x\t%s\n", address, buffer[i], ibuf);
             address++;
             if (address >= limit_write) {
                 fflush(out);

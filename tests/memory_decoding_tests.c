@@ -67,6 +67,19 @@ void test_decode_load_negative_preindex_reg_offset_lsr() {
     char* expected = "LDR R1, [R2, -R3, LSR #2]";
     CU_ASSERT_STRING_EQUAL(buffer, expected)
 }
+void test_decode_load_preindexed_immediate_value() {
+    // LDREQ R10, [R7, #1945]
+    char buffer[32];
+    memset(buffer, 0, 32);
+    uint32_t instruction;
+    instruction = 0x1C1A7813;
+
+    decode_load_store_data_ubyte(instruction, buffer);
+    printf("buf: %s\n", buffer);
+
+    char* expected = "LDREQ R10, [R7, #1945]";
+    CU_ASSERT_STRING_EQUAL(buffer, expected)
+}
 
 void test_decode_block_store_all_registers() {
     // STMIA R0,{R0-R15}; save all registers
@@ -144,6 +157,7 @@ int add_memory_decoding_tests() {
     ADD_TEST(test_decode_load_preindex_reg_offset_lsr_with_writeback)
     ADD_TEST(test_decode_load_negative_preindex_reg_offset_lsr)
     ADD_TEST(test_decode_load_postindex_imm_offset)
+    ADD_TEST(test_decode_load_preindexed_immediate_value)
     ADD_TEST(test_decode_block_store_all_registers)
     ADD_TEST(test_decode_block_store_all_registers_with_writeback_and_psr)
     ADD_TEST(test_block_transfer_without_stack_smash)

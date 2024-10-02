@@ -25,12 +25,16 @@ decoder_t select_decoder(uint32_t instruction) {
     if (IS_SWAP(instruction)) {
         return decode_swap;
     }
-    // if (IS_HALFWORD_REGISTER_TRANSFER(instruction)) {
-    // }
-    // if (IS_HALFWORD_IMMEDIATE_TRANSFER(instruction)) {
-    // }
-    // if (IS_SIGNED_DATA_TRANSFER(instruction)) {
-    // }
+    if (IS_HALFWORD_REGISTER_TRANSFER(instruction) || IS_HALFWORD_IMMEDIATE_TRANSFER(instruction) ||
+        IS_SIGNED_DATA_TRANSFER(instruction)) {
+        return decode_halfword_transfer;
+    }
+
+    if (IS_REGISTER_MSR(instruction) || IS_MRS_OPERATION(instruction) ||
+        IS_FLAG_BIT_MSR(instruction)) {
+        return decode_psr_operation;
+    }
+
     if (IS_ALU_OPERTAION(instruction)) {
         return decode_alu_operation;
     }
@@ -178,7 +182,49 @@ int decode_alu_operation(uint32_t instruction, char* buffer) {
     return 0;
 }
 
-// Needs Testing
+int decode_psr_operation(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    uint8_t cond = (instruction >> 28) & 0xF;
+    flag_t I = (instruction >> 25) & 1;
+    flag_t P = (instruction >> 22) & 1;
+    flag_t F = (instruction >> 16) & 1; // indicates if only copying flag state
+    reg_t rd = (instruction >> 12) & 0xF;
+    reg_t rm = instruction & 0xF;
+    uint16_t src_operand = instruction & 0xFFF;
+    uint8_t msr = IS_MRS_OPERATION(instruction);
+
+    char mnemonic_buffer[BUFFER_SIZE];
+    memset(mnemonic_buffer, 0, BUFFER_SIZE);
+    strcat(mnemonic_buffer, msr ? "MRS" : "MSR");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    if (IS_MRS_OPERATION(instruction)) {
+        append_register(&builder, rd);
+        append_token(&builder, P ? "SPSR" : "CPSR");
+    } else {
+        char psr_buf[BUFFER_SIZE];
+        memset(psr_buf, 0, BUFFER_SIZE);
+
+        strcat(psr_buf, P ? "SPSR" : "CPSR");
+        strcat(psr_buf, F ? "" : "_flg");
+        append_token(&builder, psr_buf);
+
+        if (F && !I) {
+            append_register(&builder, rm);
+        } else {
+            uint32_t immediate_shift;
+            SHFT_ROR(src_operand & 0xFF, (src_operand >> 8) & 0xF, &immediate_shift);
+            append_immediate(&builder, immediate_shift);
+        }
+    }
+    build_instruction(&builder, buffer);
+
+    return 0;
+}
 
 int decode_branch_exchange(uint32_t instruction, char* buffer) {
     TokenBuilder builder;
@@ -305,7 +351,6 @@ int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
 
             strcat(address_buffer, ", ");
             strcat(address_buffer, U ? "" : "-");
-            printf("\nOFFSET BUFFER: %s\n", offset_buffer);
             strcat(address_buffer, offset_buffer);
         }
     }

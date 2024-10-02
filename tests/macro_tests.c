@@ -62,6 +62,35 @@ void test_branch_link_instruction() {
     CU_ASSERT_TRUE(IS_BRANCH(instruction))
 }
 
+/*
+#define IS_MRS_OPERATION(x) (x & 0x0FBF0FFF) == 0x010F0000;
+#define IS_REGISTER_MSR(x) (x & 0x0FBFFFF0) == 0x0129F000;
+#define IS_FLAG_BIT_MSR(x) (x & 0x0DBFF000) == 0x0128F000;
+*/
+
+void test_mrs_macro() {
+    uint32_t valid_mrs_instruction = 0x010F4000;
+    CU_ASSERT_TRUE(IS_MRS_OPERATION(valid_mrs_instruction))
+
+    uint32_t invalid_mrs_instruction = 0xE064F002;
+    CU_ASSERT_FALSE(IS_MRS_OPERATION(invalid_mrs_instruction))
+}
+
+void test_register_msr_macro() {
+    uint32_t valid_msr_instruction = 0xE169F002;
+    CU_ASSERT_TRUE(IS_REGISTER_MSR(valid_msr_instruction))
+
+    uint32_t invalid_msr_instruction = 0xE064F002;
+    CU_ASSERT_FALSE(IS_REGISTER_MSR(invalid_msr_instruction))
+}
+
+void test_flag_msr_macro() {
+    uint32_t valid_flag_msr_instruction = 0xE368F002;
+    CU_ASSERT_TRUE(IS_FLAG_BIT_MSR(valid_flag_msr_instruction))
+
+    uint32_t invalid_flag_msr_instruction = 0xE064F002;
+    CU_ASSERT_FALSE(IS_FLAG_BIT_MSR(invalid_flag_msr_instruction))
+}
 int add_macro_tests() {
     CU_pSuite suite = CU_add_suite("Macro Tests", 0, 0);
 
@@ -83,6 +112,11 @@ int add_macro_tests() {
     // test branch op macros
     ADD_TEST(test_branch_link_instruction)
     ADD_TEST(test_branch_instruction)
+
+    // test psr macros
+    ADD_TEST(test_register_msr_macro)
+    ADD_TEST(test_mrs_macro);
+    ADD_TEST(test_flag_msr_macro)
 
     return CUE_SUCCESS;
 }
