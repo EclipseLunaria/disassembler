@@ -50,6 +50,15 @@ decoder_t select_decoder(uint32_t instruction) {
     if (IS_BRANCH(instruction)) {
         return decode_branch;
     }
+    if (IS_COPROCESSOR_DATA_TRANSFER(instruction)) {
+        return decode_coprocessor_data_transfer;
+    }
+    if (IS_COPROCESSOR_DATA_OPERATION(instruction)) {
+        return decode_coprocessor_data_operation;
+    }
+    if (IS_COPROCESSOR_REGISTER_TRANSFER(instruction)) {
+        return decode_coprocessor_register_transfer;
+    }
     if (IS_SOFTWARE_INTERRUPT(instruction)) {
         return decode_software_interrupt;
     }
@@ -448,5 +457,105 @@ int decode_software_interrupt(uint32_t instruction, char* buffer) {
 
 int decode_undefined(uint32_t instruction, char* buffer) {
     strcat(buffer, "<Undefined>");
+    return 0;
+}
+
+int decode_coprocessor_data_transfer(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+
+    uint8_t cond = (instruction >> 28) & 0xF;
+    flag_t P = (instruction >> 24) & 1;
+    flag_t U = (instruction >> 23) & 1;
+    flag_t N = (instruction >> 22) & 1;
+    flag_t W = (instruction >> 21) & 1;
+    flag_t L = (instruction >> 20) & 1;
+    reg_t rn = (instruction >> 16) & 0xF;
+    reg_t crd = (instruction >> 12) & 0xF;
+    uint8_t cpn = (instruction >> 8) & 0xF;
+    uint8_t offset = instruction & 0xFF;
+    OpFlags flags = {.P = P, .L = L, .W = W, .U = U, .I = 1};
+    char mnemonic_buffer[1024];
+
+    memset(mnemonic_buffer, 0, 1024);
+    strcat(mnemonic_buffer, L ? "LDC" : "STC");
+    strcat(mnemonic_buffer, N ? "L" : "");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    char token_buffer[BUFFER_SIZE];
+    memset(token_buffer, 0, BUFFER_SIZE);
+
+    append_proc_number(&builder, cpn);
+    append_proc_register(&builder, crd);
+
+    append_address_token(&builder, rn, offset, flags);
+
+    build_instruction(&builder, buffer);
+
+    return 0;
+}
+int decode_coprocessor_data_operation(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+    uint8_t cond = (instruction >> 28) & 0xF;
+    uint8_t opc = (instruction >> 20) & 0xF;
+    reg_t crn = (instruction >> 16) & 0xF;
+    reg_t crd = (instruction >> 12) & 0xF;
+    reg_t cpn = (instruction >> 8) & 0xF;
+    reg_t cp = (instruction >> 5) & 0b111;
+    reg_t crm = instruction & 0xF;
+
+    char mnemonic_buffer[BUFFER_SIZE];
+    memset(mnemonic_buffer, 0, 1024);
+    strcat(mnemonic_buffer, "CDP");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    append_proc_number(&builder, cpn);
+    append_number(&builder, opc);
+
+    append_proc_register(&builder, crd);
+    append_proc_register(&builder, crn);
+    append_proc_register(&builder, crm);
+    append_number(&builder, cp);
+
+    build_instruction(&builder, buffer);
+
+    return 0;
+}
+
+int decode_coprocessor_register_transfer(uint32_t instruction, char* buffer) {
+    TokenBuilder builder;
+    create_token_builder(&builder);
+    uint8_t cond = (instruction >> 28) & 0xF;
+
+    uint8_t opc = (instruction >> 21) & 0b111;
+    flag_t L = (instruction >> 20) & 1;
+    reg_t crn = (instruction >> 16) & 0xF;
+    reg_t crd = (instruction >> 12) & 0xF;
+    reg_t cpn = (instruction >> 8) & 0xF;
+    reg_t cp = (instruction >> 5) & 0b111;
+    reg_t crm = instruction & 0xF;
+
+    char mnemonic_buffer[BUFFER_SIZE];
+    memset(mnemonic_buffer, 0, 1024);
+    strcat(mnemonic_buffer, L ? "MRC" : "MCR");
+    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
+    strcat(mnemonic_buffer, " ");
+    append_token(&builder, mnemonic_buffer);
+
+    append_proc_number(&builder, cpn);
+    append_number(&builder, opc);
+
+    append_proc_register(&builder, crd);
+    append_proc_register(&builder, crn);
+
+    append_proc_register(&builder, crm);
+    append_number(&builder, cp);
+
+    build_instruction(&builder, buffer);
     return 0;
 }

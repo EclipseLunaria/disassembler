@@ -88,6 +88,22 @@ int append_address_token(TokenBuilder* builder, reg_t rn, uint16_t offset, OpFla
     return 0;
 }
 
+int append_number(TokenBuilder* b, uint32_t n) {
+    sprintf(b->tokens[b->count], "%d", n);
+    b->count += 1;
+    return 0;
+}
+int append_proc_number(TokenBuilder* b, uint8_t n) {
+    sprintf(b->tokens[b->count], "p%d", n);
+    b->count += 1;
+    return 0;
+}
+int append_proc_register(TokenBuilder* b, reg_t r) {
+    sprintf(b->tokens[b->count], "c%d", r);
+    b->count += 1;
+    return 0;
+}
+
 int build_register_token(reg_t r, char* s) {
     if (r == 14) {
         strcpy(s, "SP");
