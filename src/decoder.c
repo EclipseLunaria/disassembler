@@ -550,7 +550,7 @@ int decode_coprocessor_register_transfer(uint32_t instruction, char* buffer) {
     append_proc_number(&builder, cpn);
     append_number(&builder, opc);
 
-    append_proc_register(&builder, crd);
+    append_register(&builder, crd);
     append_proc_register(&builder, crn);
 
     append_proc_register(&builder, crm);
