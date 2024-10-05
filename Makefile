@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Iinclude -Wall -Werror
 SRC = src/decoder.c src/constants.c src/shift_ops.c src/instruction_builder.c src/main.c
-HEADERS = include/constants.h include/debug.h include/decoder.h include/constants.h include/shift_ops.h include/core.h include/instruction_builder.h
+HEADERS = include/constants.h include/debug.h include/arm_decoder.h include/constants.h include/shift_ops.h include/core.h include/instruction_builder.h
 TARGET = main
 
 # Build the main project executable

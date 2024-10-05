@@ -1,4 +1,4 @@
-#include "decoder.h"
+#include "arm_decoder.h"
 
 int decode_instruction(uint32_t instruction, char* buffer) {
     decoder_t decoder = select_decoder(instruction);

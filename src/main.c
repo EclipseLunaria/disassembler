@@ -1,8 +1,8 @@
 #include <stdio.h>
 
+#include "arm_decoder.h"
 #include "constants.h"
 #include "debug.h"
-#include "decoder.h"
 int main(int argc, char* argv[]) {
     uint32_t READ_START = 0;
     size_t limit_write = 0xFFFFFFF;

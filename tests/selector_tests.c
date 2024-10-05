@@ -1,7 +1,7 @@
 #include <CUnit/Basic.h>
 #include <CUnit/CUnit.h>
 
-#include "decoder.h"
+#include "arm_decoder.h"
 #include "test_macros.h"
 
 void test_select_alu() {
