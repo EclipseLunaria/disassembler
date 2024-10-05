@@ -28,4 +28,23 @@ int decode_thumb_instruction(uint16_t instruction) {
     return 0;
 }
 
+int decode_thumb_move_shift_register(uint16_t instruction);
+int decode_thumb_add_subtract(uint16_t instruction);
+int decode_thumb_immediate_operation(uint16_t instruction);
+int decode_thumb_alu_operation(uint16_t instruction);
+int decode_thumb_hi_reg_branch_exchange(uint16_t instruction);
+int decode_thumb_pc_relative_load(uint16_t instruction);
+int decode_thumb_conditional_branch(uint16_t instruction);
+int decode_thumb_unconditional_branch(uint16_t instruction);
+int decode_thumb_transfer_register_offset(uint16_t instruction);
+int decode_thumb_transfer_immediate_offset(uint16_t instruction);
+int decode_thumb_transfer_signed_byte_halfword(uint16_t instruction);
+int decode_thumb_transfer_halfword(uint16_t instruction);
+int decode_thumb_sp_relative_transfer(uint16_t instruction);
+int decode_thumb_load_address(uint16_t instruction);
+int decode_thumb_add_offset_to_stack_pointer(uint16_t instruction);
+int decode_thumb_block_transfer(uint16_t instruction);
+int decode_thumb_software_interrupt(uint16_t instruction);
+int decode_thumb_push_pop_registers(uint16_t instruction);
+int decode_thumb_long_branch_with_link(uint16_t instruction);
 #endif

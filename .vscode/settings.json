@@ -13,6 +13,7 @@
         "shift_ops.h": "c",
         "nl_types.h": "c",
         "core.h": "c",
+        "thumb_decoder.h": "c",
         "instruction_builder.h": "c"
     },
     "[cpp]": {
