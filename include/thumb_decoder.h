@@ -2,6 +2,7 @@
 #define DECODER_THUMB_H
 
 #include "core.h"
+#include "instruction_builder.h"
 
 #define IS_MOVE_SHIFTED_REGISTER(x) (x & 0xE000) == 0 && ((x >> 11) & 0b11) != 0
 #define IS_ADD_SUBTRACT(x) (x & 0xF800) == 0x1800
@@ -23,28 +24,28 @@
 #define IS_UNCONDITIONAL_BRANCH(x) (x & 0xF800) == 0xE000
 #define IS_LONG_BRANCH_WITH_LINK(x) (x & 0xF000) == 0xF000
 
-int decode_thumb_instruction(uint16_t instruction) {
+int decode_thumb_instruction(uint16_t instruction, char * s) {
 
     return 0;
 }
 
-int decode_thumb_move_shift_register(uint16_t instruction);
-int decode_thumb_add_subtract(uint16_t instruction);
-int decode_thumb_immediate_operation(uint16_t instruction);
-int decode_thumb_alu_operation(uint16_t instruction);
-int decode_thumb_hi_reg_branch_exchange(uint16_t instruction);
-int decode_thumb_pc_relative_load(uint16_t instruction);
-int decode_thumb_conditional_branch(uint16_t instruction);
-int decode_thumb_unconditional_branch(uint16_t instruction);
-int decode_thumb_transfer_register_offset(uint16_t instruction);
-int decode_thumb_transfer_immediate_offset(uint16_t instruction);
-int decode_thumb_transfer_signed_byte_halfword(uint16_t instruction);
-int decode_thumb_transfer_halfword(uint16_t instruction);
-int decode_thumb_sp_relative_transfer(uint16_t instruction);
-int decode_thumb_load_address(uint16_t instruction);
-int decode_thumb_add_offset_to_stack_pointer(uint16_t instruction);
-int decode_thumb_block_transfer(uint16_t instruction);
-int decode_thumb_software_interrupt(uint16_t instruction);
-int decode_thumb_push_pop_registers(uint16_t instruction);
-int decode_thumb_long_branch_with_link(uint16_t instruction);
+int decode_thumb_move_shift_register(uint16_t instruction, char * s);
+int decode_thumb_add_subtract(uint16_t instruction, char * s);
+int decode_thumb_immediate_operation(uint16_t instruction, char * s);
+int decode_thumb_alu_operation(uint16_t instruction, char * s);
+int decode_thumb_hi_reg_branch_exchange(uint16_t instruction, char * s);
+int decode_thumb_pc_relative_load(uint16_t instruction, char * s);
+int decode_thumb_conditional_branch(uint16_t instruction, char * s);
+int decode_thumb_unconditional_branch(uint16_t instruction, char * s);
+int decode_thumb_transfer_register_offset(uint16_t instruction, char * s);
+int decode_thumb_transfer_immediate_offset(uint16_t instruction, char * s);
+int decode_thumb_transfer_signed_byte_halfword(uint16_t instruction, char * s);
+int decode_thumb_transfer_halfword(uint16_t instruction, char * s);
+int decode_thumb_sp_relative_transfer(uint16_t instruction, char * s);
+int decode_thumb_load_address(uint16_t instruction, char * s);
+int decode_thumb_add_offset_to_stack_pointer(uint16_t instruction, char * s);
+int decode_thumb_block_transfer(uint16_t instruction, char * s);
+int decode_thumb_software_interrupt(uint16_t instruction, char * s);
+int decode_thumb_push_pop_registers(uint16_t instruction, char * s);
+int decode_thumb_long_branch_with_link(uint16_t instruction, char * s);
 #endif

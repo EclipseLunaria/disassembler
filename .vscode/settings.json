@@ -14,7 +14,8 @@
         "nl_types.h": "c",
         "core.h": "c",
         "thumb_decoder.h": "c",
-        "instruction_builder.h": "c"
+        "instruction_builder.h": "c",
+        "stdarg.h": "c"
     },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"

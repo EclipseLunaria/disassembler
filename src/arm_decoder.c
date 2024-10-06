@@ -142,7 +142,7 @@ int decode_alu_operation(uint32_t instruction, char* buffer) {
 
     char mnemonic_buffer[16];
     memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, ALU_OPCODES[opcode]);
+    strcat(mnemonic_buffer, ARM_ALU_OPCODES[opcode]);
     strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
     strcat(mnemonic_buffer, S ? "S" : "");
     strcat(mnemonic_buffer, " ");

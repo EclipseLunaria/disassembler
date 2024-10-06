@@ -26,6 +26,7 @@ typedef struct OpFlags {
 
 typedef struct TokenBuilder {
     char tokens[8][16];
+    char _buffer[BUFFER_SIZE];
     int count;
     char* mnemonic;
 

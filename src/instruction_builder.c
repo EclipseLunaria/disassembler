@@ -24,6 +24,16 @@ int build_instruction(TokenBuilder* b, char* buffer) {
     return 0;
 }
 
+int append_fmt_token(TokenBuilder* b, const char* buf, ...) {
+    va_list args;
+    va_start(args, buf);
+    vsprintf(b->_buffer, buf, args);
+    va_end(args);
+    append_token(b, b->_buffer);
+    memset(b->_buffer, 0, BUFFER_SIZE);
+    return 0;
+}
+
 int append_token(TokenBuilder* b, char* s) {
     if (b->count >= 8)
         return -1;
