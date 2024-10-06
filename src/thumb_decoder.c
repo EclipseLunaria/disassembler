@@ -8,11 +8,7 @@ int decode_thumb_move_shift_register(uint16_t instruction, char* s) {
     reg_t rs = (instruction >> 3) & 0b111;
     reg_t rd = instruction & 0b111;
 
-    char shift_token[BUFFER_SIZE];
-    memset(shift_token, 0, BUFFER_SIZE);
-
-    sprintf(shift_token, "%s ", SHIFT_OP_STRS[op]);
-    append_token(&builder, shift_token);
+    append_fmt_token(&builder, "%s ", SHIFT_OP_STRS[op]);
 
     append_register(&builder, rs);
     append_register(&builder, rd);
@@ -49,10 +45,7 @@ int decode_thumb_immediate_operation(uint16_t instruction, char* s) {
     reg_t rd = (instruction >> 8) & 0b111;
     uint8_t offset8 = instruction & 0xFF;
 
-    char buf[BUFFER_SIZE];
-    memset(buf, 0, BUFFER_SIZE);
-    sprintf(buf, "%s ", IMMEDIATE_THUMB_OPS[op]);
-    append_token(&builder, buf);
+    append_fmt_token(&builder, "%s ", IMMEDIATE_THUMB_OPS[op]);
 
     append_register(&builder, rd);
     append_immediate(&builder, offset8);
@@ -69,11 +62,8 @@ int decode_thumb_alu_operation(uint16_t instruction, char* s) {
     reg_t rs = (instruction >> 3) & 0b111;
     reg_t rd = instruction & 0b111;
 
-    char buf[BUFFER_SIZE];
-    memset(buf, 0, BUFFER_SIZE);
-    sprintf(buf, "%s ", THUMB_ALU_OPCODES[op]);
+    append_fmt_token(&builder, "%s ", THUMB_ALU_OPCODES[op]);
 
-    append_token(&builder, buf);
     append_register(&builder, rd);
     append_register(&builder, rs);
 
@@ -92,10 +82,7 @@ int decode_thumb_hi_reg_branch_exchange(uint16_t instruction, char* s) {
     reg_t rs_hs = (instruction >> 3) & 0b111;
     reg_t rd_hd = instruction & 0b111;
 
-    char buf[BUFFER_SIZE];
-    memset(buf, 0, BUFFER_SIZE);
-    sprintf(buf, "%s ", op < 0b11 ? strcat(buf, IMMEDIATE_THUMB_OPS[op]) : strcat(buf, "BX"));
-
+    append_fmt_token(&builder, "%s ", op < 0b11 ? IMMEDIATE_THUMB_OPS[op] : "BX");
     append_register(&builder, H1 ? rd_hd + 8 : rd_hd);
     append_register(&builder, H2 ? rs_hs + 8 : rs_hs);
 
@@ -240,7 +227,6 @@ int decode_thumb_add_offset_to_stack_pointer(uint16_t instruction, char* s) {
     return 0;
 }
 
-
 int decode_thumb_push_pop_registers(uint16_t instruction, char* s) {
     TokenBuilder builder;
     create_token_builder(&builder);
@@ -249,9 +235,8 @@ int decode_thumb_push_pop_registers(uint16_t instruction, char* s) {
     flag_t R = (instruction >> 8) & 1;
     reg_t rlist = (instruction >> 6) & 0xF;
     return 0;
-    return 0;
-    return 0;
 }
+
 int decode_thumb_block_transfer(uint16_t instruction, char* s) {
     TokenBuilder builder;
     create_token_builder(&builder);
@@ -267,6 +252,10 @@ int decode_thumb_conditional_branch(uint16_t instruction, char* s) {
 
     uint8_t cond = (instruction >> 8) & 0xF;
     uint8_t soffset8 = instruction & 0xFF;
+
+    append_fmt_token(&builder, "B%s ", COND_TYPE_STRS[cond]);
+    append_immediate(&builder, soffset8);
+    build_instruction(&builder, s);
     return 0;
 }
 
@@ -275,7 +264,9 @@ int decode_thumb_software_interrupt(uint16_t instruction, char* s) {
     create_token_builder(&builder);
 
     uint8_t value8 = instruction & 0xFF;
-
+    append_token(&builder, "SWI ");
+    append_immediate(&builder, value8);
+    build_instruction(&builder, s);
     return 0;
 }
 int decode_thumb_unconditional_branch(uint16_t instruction, char* s) {
@@ -283,6 +274,10 @@ int decode_thumb_unconditional_branch(uint16_t instruction, char* s) {
     create_token_builder(&builder);
 
     uint8_t offset11 = instruction & 0xFFF;
+
+    append_token(&builder, "B ");
+    append_immediate(&builder, offset11);
+    build_instruction(&builder, s);
 
     return 0;
 }
@@ -293,5 +288,11 @@ int decode_thumb_long_branch_with_link(uint16_t instruction, char* s) {
 
     flag_t H = (instruction >> 11) & 1;
     uint8_t offset = instruction & 0x7FF;
+
+    append_token(&builder, "BL ");
+    append_immediate(&builder, offset);
+
+    build_instruction(&builder, s);
+
     return 0;
 }
