@@ -16,15 +16,17 @@ typedef uint8_t flag_t;
 typedef uint8_t reg_t;
 
 typedef struct OpFlags {
-    uint8_t I : 1;
-    uint8_t P : 1;
-    uint8_t U : 1;
-    uint8_t B : 1;
-    uint8_t L : 1;
-    uint8_t W : 1;
-    uint8_t H : 1;
-    uint8_t S : 1;
-    uint8_t N : 1;
+    flag_t I : 1;
+    flag_t P : 1;
+    flag_t U : 1;
+    flag_t B : 1;
+    flag_t L : 1;
+    flag_t W : 1;
+    flag_t H : 1;
+    flag_t S : 1;
+    flag_t N : 1;
+    flag_t F : 1;
+    flag_t A : 1;
 } OpFlags;
 
 typedef struct TokenBuilder {

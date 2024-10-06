@@ -73,6 +73,7 @@ int decode_multiply(uint32_t instruction, char* buffer) {
     uint8_t cond = (instruction >> 28) & 0xFF;
     flag_t A = (instruction >> 21) & 1;
     flag_t S = (instruction >> 20) & 1;
+    
     reg_t rd = (instruction >> 16) & 0xF;
     reg_t rn = (instruction >> 12) & 0xF;
     reg_t rs = (instruction >> 8) & 0xF;
@@ -94,16 +95,19 @@ int decode_long_multiply(uint32_t instruction, char* buffer) {
     create_token_builder(&builder);
 
     uint8_t cond = (instruction >> 28) & 0xFF;
-    flag_t U = (instruction >> 20) & 1;
-    flag_t A = (instruction >> 21) & 1;
-    flag_t S = (instruction >> 20) & 1;
+    OpFlags flags = {
+        .U = (instruction >> 20) & 1,
+        .A = (instruction >> 21) & 1,
+        .S = (instruction >> 20) & 1,
+    };
+
     reg_t rdhi = (instruction >> 16) & 0xF;
     reg_t rdlo = (instruction >> 12) & 0xF;
     reg_t rs = (instruction >> 8) & 0xF;
     reg_t rm = instruction & 0xF;
 
-    append_fmt_token(&builder, "%s%s%s%s ", U ? "S" : "U", A ? "MLAL" : "MULL",
-                     COND_TYPE_STRS[cond], S ? "S" : "");
+    append_fmt_token(&builder, "%s%s%s%s ", flags.U ? "S" : "U", flags.A ? "MLAL" : "MULL",
+                     COND_TYPE_STRS[cond], flags.S ? "S" : "");
 
     append_register(&builder, rdlo);
     append_register(&builder, rdhi);
@@ -120,8 +124,9 @@ int decode_alu_operation(uint32_t instruction, char* buffer) {
 
     uint8_t cond = (instruction >> 28) & 0xFF;
     flag_t I = (instruction >> 25) & 1;
-    uint8_t opcode = (instruction >> 21) & 0xF;
     flag_t S = (instruction >> 20) & 1;
+
+    uint8_t opcode = (instruction >> 21) & 0xF;
     reg_t rn = (instruction >> 16) & 0xF;
     reg_t rd = (instruction >> 12) & 0xF;
     uint16_t operand2 = instruction & 0xFFF;
@@ -177,9 +182,9 @@ int decode_psr_operation(uint32_t instruction, char* buffer) {
     create_token_builder(&builder);
 
     uint8_t cond = (instruction >> 28) & 0xF;
-    flag_t I = (instruction >> 25) & 1;
-    flag_t P = (instruction >> 22) & 1;
-    flag_t F = (instruction >> 16) & 1; // indicates if only copying flag state
+    OpFlags flags = {
+        .I = (instruction >> 25) & 1, .P = (instruction >> 22) & 1, .F = (instruction >> 16) & 1};
+
     reg_t rd = (instruction >> 12) & 0xF;
     reg_t rm = instruction & 0xF;
     uint16_t src_operand = instruction & 0xFFF;
@@ -189,11 +194,11 @@ int decode_psr_operation(uint32_t instruction, char* buffer) {
 
     if (IS_MRS_OPERATION(instruction)) {
         append_register(&builder, rd);
-        append_token(&builder, P ? "SPSR" : "CPSR");
+        append_token(&builder, flags.P ? "SPSR" : "CPSR");
     } else {
-        append_fmt_token(&builder, "%s%s", P ? "SPSR" : "CPSR", F ? "" : "_flg");
+        append_fmt_token(&builder, "%s%s", flags.P ? "SPSR" : "CPSR", flags.F ? "" : "_flg");
 
-        if (F && !I) {
+        if (flags.F && !flags.I) {
             append_register(&builder, rm);
         } else {
             uint32_t immediate_shift;
@@ -223,7 +228,7 @@ int decode_branch(uint32_t instruction, char* buffer) {
     TokenBuilder builder;
     create_token_builder(&builder);
     uint8_t cond = (instruction >> 28) & 0xF;
-    uint8_t L = (instruction >> 28) & 0xFF;
+    flag_t L = (instruction >> 28) & 0xFF;
     uint32_t shift = instruction & 0xFFFF;
 
     append_fmt_token(&builder, "B%s%s ", L ? "L" : "", COND_TYPE_STRS[cond]);
@@ -326,26 +331,28 @@ int decode_block_data_transfer(uint32_t instruction, char* buffer) {
     create_token_builder(&builder);
 
     uint8_t cond = (instruction >> 28) & 0xF;
-    flag_t P = (instruction >> 24) & 1;
-    flag_t U = (instruction >> 23) & 1;
-    flag_t S = (instruction >> 22) & 1;
-    flag_t W = (instruction >> 21) & 1;
-    flag_t L = (instruction >> 20) & 1;
-    uint8_t transfer_type = L << 2 | P << 1 | U;
+    OpFlags flags = {.P = (instruction >> 24) & 1,
+                     .U = (instruction >> 23) & 1,
+                     .S = (instruction >> 22) & 1,
+                     .W = (instruction >> 21) & 1,
+                     .L = (instruction >> 20) & 1};
+
     reg_t rn = (instruction >> 16) & 0xF;
     uint16_t reg_list = instruction & 0xFFFF;
+    uint8_t transfer_type = flags.L << 2 | flags.P << 1 | flags.U;
+
+    char reg_list_buffer[BUFFER_SIZE];
+    memset(reg_list_buffer, 0, BUFFER_SIZE);
 
     append_fmt_token(&builder, "%s%s ",
                      rn == 14 ? STACK_BLOCK_SUFFIXS[transfer_type]
                               : OTHER_BLOCK_SUFFIXS[transfer_type],
                      COND_TYPE_STRS[cond]);
 
-    append_fmt_token(&builder, "R%d%s", rn, W ? "!" : "");
-    // build register list
-    char reg_list_buffer[BUFFER_SIZE];
-    memset(reg_list_buffer, 0, BUFFER_SIZE);
+    append_fmt_token(&builder, "R%d%s", rn, flags.W ? "!" : "");
+
     build_register_list(reg_list, reg_list_buffer);
-    append_fmt_token(&builder, "{%s}%s", reg_list_buffer, S ? "^" : "");
+    append_fmt_token(&builder, "{%s}%s", reg_list_buffer, flags.S ? "^" : "");
 
     build_instruction(&builder, buffer);
     return 0;
@@ -354,28 +361,29 @@ int decode_block_data_transfer(uint32_t instruction, char* buffer) {
 int decode_halfword_transfer(uint32_t instruction, char* buffer) {
     TokenBuilder builder;
     create_token_builder(&builder);
+
     uint8_t cond = instruction >> 28;
-    flag_t P = (instruction >> 24) & 1;
-    flag_t U = (instruction >> 23) & 1;
-    flag_t I = (instruction >> 22) & 1;
-    flag_t W = (instruction >> 21) & 1;
-    flag_t L = (instruction >> 20) & 1;
+    OpFlags flags = {
+        .P = (instruction >> 24) & 1,
+        .U = (instruction >> 23) & 1,
+        .I = (instruction >> 22) & 1,
+        .W = (instruction >> 21) & 1,
+        .L = (instruction >> 20) & 1,
+        .H = (instruction >> 5) & 1,
+        .S = (instruction >> 6) & 1,
+    };
+
     reg_t rn = (instruction >> 16) & 0xF;
     reg_t rd = (instruction >> 12) & 0xF;
-    flag_t S = (instruction >> 6) & 1;
-    flag_t H = (instruction >> 5) & 1;
-    OpFlags flags = {.P = P, .U = U, .H = H, .S = S, .L = L, .W = W, .I = I};
-    assert(((S << 1 | H) & 0b11) != 0);
 
-    append_fmt_token(&builder, "%s%s%s%s ", L ? "LDR" : "STR", COND_TYPE_STRS[cond],
+    assert(((flags.S << 1 | flags.H) & 0b11) != 0);
+
+    append_fmt_token(&builder, "%s%s%s%s ", flags.L ? "LDR" : "STR", COND_TYPE_STRS[cond],
                      flags.S ? "S" : "", flags.H ? "H" : "B");
-
     append_register(&builder, rd);
-
-    uint16_t offset =
-        flags.I ? (instruction & 0xF) | ((instruction >> 8) & 0xF0) : instruction & 0xF;
-
-    append_address_token(&builder, rn, offset, flags);
+    append_address_token(
+        &builder, rn,
+        flags.I ? (instruction & 0xF) | ((instruction >> 8) & 0xF0) : instruction & 0xF, flags);
 
     build_instruction(&builder, buffer);
     return 0;
@@ -396,16 +404,16 @@ int decode_coprocessor_data_transfer(uint32_t instruction, char* buffer) {
     create_token_builder(&builder);
 
     uint8_t cond = (instruction >> 28) & 0xF;
-    flag_t P = (instruction >> 24) & 1;
-    flag_t U = (instruction >> 23) & 1;
-    flag_t N = (instruction >> 22) & 1;
-    flag_t W = (instruction >> 21) & 1;
-    flag_t L = (instruction >> 20) & 1;
+    OpFlags flags = {.P = (instruction >> 24) & 1,
+                     .U = (instruction >> 23) & 1,
+                     .N = (instruction >> 22) & 1,
+                     .W = (instruction >> 21) & 1,
+                     .L = (instruction >> 20) & 1,
+                     .I = 1};
     reg_t rn = (instruction >> 16) & 0xF;
     reg_t crd = (instruction >> 12) & 0xF;
     uint8_t cpn = (instruction >> 8) & 0xF;
     uint8_t offset = instruction & 0xFF;
-    OpFlags flags = {.P = P, .L = L, .W = W, .U = U, .I = 1, .N = N};
 
     append_fmt_token(&builder, "%s%s%s ", flags.L ? "LDC" : "STC", flags.N ? "L" : "",
                      COND_TYPE_STRS[cond]);
