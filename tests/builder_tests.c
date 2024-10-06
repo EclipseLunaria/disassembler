@@ -49,7 +49,7 @@ void test_build_register_list() {
     build_register_list(reg_list, actual);
     printf("actual buffer: %s\n", actual);
 
-    CU_ASSERT_STRING_EQUAL(actual, "{R0-R7}")
+    CU_ASSERT_STRING_EQUAL(actual, "R0-R7")
 }
 void test_build_register_list_single_and_group() {
     uint16_t reg_list = 0x2F;
@@ -58,7 +58,7 @@ void test_build_register_list_single_and_group() {
     build_register_list(reg_list, actual);
     printf("actual buffer: %s\n", actual);
 
-    CU_ASSERT_STRING_EQUAL(actual, "{R0-R3, R5}")
+    CU_ASSERT_STRING_EQUAL(actual, "R0-R3, R5")
 }
 void test_build_register_list_single_register() {
     uint16_t reg_list = 0x2;
@@ -67,7 +67,7 @@ void test_build_register_list_single_register() {
     build_register_list(reg_list, actual);
     printf("actual buffer: %s\n", actual);
 
-    CU_ASSERT_STRING_EQUAL(actual, "{R1}")
+    CU_ASSERT_STRING_EQUAL(actual, "R1")
 }
 void test_build_register_list_split_register_groups() {
     uint16_t reg_list = 0xF0F;
@@ -76,7 +76,7 @@ void test_build_register_list_split_register_groups() {
     build_register_list(reg_list, actual);
     printf("actual buffer: %s\n", actual);
 
-    CU_ASSERT_STRING_EQUAL(actual, "{R0-R3, R8-R11}")
+    CU_ASSERT_STRING_EQUAL(actual, "R0-R3, R8-R11")
 }
 
 int add_instruction_builder_tests() {

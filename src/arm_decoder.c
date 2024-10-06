@@ -102,16 +102,8 @@ int decode_long_multiply(uint32_t instruction, char* buffer) {
     reg_t rs = (instruction >> 8) & 0xF;
     reg_t rm = instruction & 0xF;
 
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-
-    strcat(mnemonic_buffer, U ? "S" : "U");
-    strcat(mnemonic_buffer, A ? "MLA" : "MUL");
-    strcat(mnemonic_buffer, "L");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, S ? "S" : "");
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+    append_fmt_token(&builder, "%s%s%s%s ", U ? "S" : "U", A ? "MLAL" : "MULL",
+                     COND_TYPE_STRS[cond], S ? "S" : "");
 
     append_register(&builder, rdlo);
     append_register(&builder, rdhi);
@@ -134,13 +126,8 @@ int decode_alu_operation(uint32_t instruction, char* buffer) {
     reg_t rd = (instruction >> 12) & 0xF;
     uint16_t operand2 = instruction & 0xFFF;
 
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, ARM_ALU_OPCODES[opcode]);
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, S ? "S" : "");
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+    append_fmt_token(&builder, "%s%s%s ", ARM_ALU_OPCODES[opcode], COND_TYPE_STRS[cond],
+                     S ? "S" : "");
 
     if (strncmp(builder.mnemonic, "CMP", 3) && strncmp(builder.mnemonic, "CMN", 3) &&
         strncmp(builder.mnemonic, "TST", 3) && strncmp(builder.mnemonic, "TEQ", 3)) {
@@ -198,23 +185,13 @@ int decode_psr_operation(uint32_t instruction, char* buffer) {
     uint16_t src_operand = instruction & 0xFFF;
     uint8_t msr = IS_MRS_OPERATION(instruction);
 
-    char mnemonic_buffer[BUFFER_SIZE];
-    memset(mnemonic_buffer, 0, BUFFER_SIZE);
-    strcat(mnemonic_buffer, msr ? "MRS" : "MSR");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+    append_fmt_token(&builder, "%s%s ", msr ? "MRS" : "MSR", COND_TYPE_STRS[cond]);
 
     if (IS_MRS_OPERATION(instruction)) {
         append_register(&builder, rd);
         append_token(&builder, P ? "SPSR" : "CPSR");
     } else {
-        char psr_buf[BUFFER_SIZE];
-        memset(psr_buf, 0, BUFFER_SIZE);
-
-        strcat(psr_buf, P ? "SPSR" : "CPSR");
-        strcat(psr_buf, F ? "" : "_flg");
-        append_token(&builder, psr_buf);
+        append_fmt_token(&builder, "%s%s", P ? "SPSR" : "CPSR", F ? "" : "_flg");
 
         if (F && !I) {
             append_register(&builder, rm);
@@ -236,13 +213,7 @@ int decode_branch_exchange(uint32_t instruction, char* buffer) {
     uint8_t cond = (instruction >> 28) & 0xFF;
     reg_t rn = instruction & 0xF;
 
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, "BX");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
-
+    append_fmt_token(&builder, "BX%s ", COND_TYPE_STRS[cond]);
     append_register(&builder, rn);
     build_instruction(&builder, buffer);
     return 0;
@@ -255,13 +226,7 @@ int decode_branch(uint32_t instruction, char* buffer) {
     uint8_t L = (instruction >> 28) & 0xFF;
     uint32_t shift = instruction & 0xFFFF;
 
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, "B");
-    strcat(mnemonic_buffer, L ? "L" : "");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+    append_fmt_token(&builder, "B%s%s ", L ? "L" : "", COND_TYPE_STRS[cond]);
 
     // needs to test sign maybe needs extenstion
     append_immediate(&builder, shift);
@@ -279,13 +244,7 @@ int decode_swap(uint32_t instruction, char* buffer) {
     reg_t rd = (instruction >> 12) & 0xF;
     reg_t rm = instruction & 0xF;
 
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, "SWP");
-    strcat(mnemonic_buffer, B ? "B" : "");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+    append_fmt_token(&builder, "SWP%s%s ", B ? "B" : "", COND_TYPE_STRS[cond]);
 
     append_register(&builder, rd);
     append_register(&builder, rm);
@@ -317,19 +276,12 @@ int decode_load_store_data_ubyte(uint32_t instruction, char* buffer) {
 
     TokenBuilder builder;
     create_token_builder(&builder);
-    // build mnemonic
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, L ? "LDR" : "STR");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, B ? "B" : "");
-    strcat(mnemonic_buffer, W && !P ? "T" : "");
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
 
+    append_fmt_token(&builder, "%s%s%s%s ", L ? "LDR" : "STR", COND_TYPE_STRS[cond], B ? "B" : "",
+                     W && !P ? "T" : "");
     append_register(&builder, rd);
 
-    // build memory token
+    // TODO: migrate memory method
     char address_buffer[64];
     memset(address_buffer, 0, 64);
 
@@ -382,26 +334,18 @@ int decode_block_data_transfer(uint32_t instruction, char* buffer) {
     uint8_t transfer_type = L << 2 | P << 1 | U;
     reg_t rn = (instruction >> 16) & 0xF;
     uint16_t reg_list = instruction & 0xFFFF;
-    char mnemonic_buffer[1024];
-    memset(mnemonic_buffer, 0, 1024);
-    strcat(mnemonic_buffer,
-           rn == 14 ? STACK_BLOCK_SUFFIXS[transfer_type] : OTHER_BLOCK_SUFFIXS[transfer_type]);
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
 
-    // possibly break this down into a method
-    char reg_token[1024];
-    memset(reg_token, 0, 1024);
-    build_register_token(rn, reg_token);
-    strcat(reg_token, W ? "!" : "");
-    append_token(&builder, reg_token);
+    append_fmt_token(&builder, "%s%s ",
+                     rn == 14 ? STACK_BLOCK_SUFFIXS[transfer_type]
+                              : OTHER_BLOCK_SUFFIXS[transfer_type],
+                     COND_TYPE_STRS[cond]);
+
+    append_fmt_token(&builder, "R%d%s", rn, W ? "!" : "");
     // build register list
-    char reg_list_buffer[1024];
-    memset(reg_list_buffer, 0, 1024);
+    char reg_list_buffer[BUFFER_SIZE];
+    memset(reg_list_buffer, 0, BUFFER_SIZE);
     build_register_list(reg_list, reg_list_buffer);
-    strcat(reg_list_buffer, S ? "^" : "");
-    append_token(&builder, reg_list_buffer);
+    append_fmt_token(&builder, "{%s}%s", reg_list_buffer, S ? "^" : "");
 
     build_instruction(&builder, buffer);
     return 0;
@@ -422,19 +366,12 @@ int decode_halfword_transfer(uint32_t instruction, char* buffer) {
     flag_t H = (instruction >> 5) & 1;
     OpFlags flags = {.P = P, .U = U, .H = H, .S = S, .L = L, .W = W, .I = I};
     assert(((S << 1 | H) & 0b11) != 0);
-    char mnemonic_buffer[1024];
-    memset(mnemonic_buffer, 0, 1024);
-    strcat(mnemonic_buffer, flags.L ? "LDR" : "STR");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, flags.S ? "S" : "");
-    strcat(mnemonic_buffer, flags.H ? "H" : "B");
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+
+    append_fmt_token(&builder, "%s%s%s%s ", L ? "LDR" : "STR", COND_TYPE_STRS[cond],
+                     flags.S ? "S" : "", flags.H ? "H" : "B");
 
     append_register(&builder, rd);
 
-    char rn_buffer[1024];
-    memset(rn_buffer, 0, 1024);
     uint16_t offset =
         flags.I ? (instruction & 0xF) | ((instruction >> 8) & 0xF0) : instruction & 0xF;
 
@@ -468,18 +405,10 @@ int decode_coprocessor_data_transfer(uint32_t instruction, char* buffer) {
     reg_t crd = (instruction >> 12) & 0xF;
     uint8_t cpn = (instruction >> 8) & 0xF;
     uint8_t offset = instruction & 0xFF;
-    OpFlags flags = {.P = P, .L = L, .W = W, .U = U, .I = 1};
-    char mnemonic_buffer[1024];
+    OpFlags flags = {.P = P, .L = L, .W = W, .U = U, .I = 1, .N = N};
 
-    memset(mnemonic_buffer, 0, 1024);
-    strcat(mnemonic_buffer, L ? "LDC" : "STC");
-    strcat(mnemonic_buffer, N ? "L" : "");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
-
-    char token_buffer[BUFFER_SIZE];
-    memset(token_buffer, 0, BUFFER_SIZE);
+    append_fmt_token(&builder, "%s%s%s ", flags.L ? "LDC" : "STC", flags.N ? "L" : "",
+                     COND_TYPE_STRS[cond]);
 
     append_proc_number(&builder, cpn);
     append_proc_register(&builder, crd);
@@ -501,13 +430,7 @@ int decode_coprocessor_data_operation(uint32_t instruction, char* buffer) {
     reg_t cp = (instruction >> 5) & 0b111;
     reg_t crm = instruction & 0xF;
 
-    char mnemonic_buffer[BUFFER_SIZE];
-    memset(mnemonic_buffer, 0, 1024);
-    strcat(mnemonic_buffer, "CDP");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
-
+    append_fmt_token(&builder, "CDP%s ", COND_TYPE_STRS[cond]);
     append_proc_number(&builder, cpn);
     append_number(&builder, opc);
 
@@ -534,13 +457,7 @@ int decode_coprocessor_register_transfer(uint32_t instruction, char* buffer) {
     reg_t cp = (instruction >> 5) & 0b111;
     reg_t crm = instruction & 0xF;
 
-    char mnemonic_buffer[BUFFER_SIZE];
-    memset(mnemonic_buffer, 0, 1024);
-    strcat(mnemonic_buffer, L ? "MRC" : "MCR");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
-
+    append_fmt_token(&builder, "%s%s ", L ? "MRC" : "MCR", COND_TYPE_STRS[cond]);
     append_proc_number(&builder, cpn);
     append_number(&builder, opc);
 

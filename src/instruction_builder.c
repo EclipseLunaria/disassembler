@@ -177,7 +177,6 @@ int build_register_list(uint16_t reg_list, char* s) {
     uint8_t reg_buf_size = 0;
     char reg_list_buffers[32][32];
     memset(reg_list_buffers, 0, sizeof(reg_list_buffers));
-    strcat(s, "{");
     reg_t reg_stack[16];
     uint8_t stack_length = 0;
     for (int i = 0; i < 16; ++i) {
@@ -205,6 +204,5 @@ int build_register_list(uint16_t reg_list, char* s) {
         strcat(join_buf, reg_list_buffers[i]);
         strcat(s, join_buf);
     }
-    strcat(s, "}");
     return 0;
 }

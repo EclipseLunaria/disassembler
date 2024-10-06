@@ -13,10 +13,10 @@ char* COND_TYPE_STRS[] = {
 char* SHIFT_OP_STRS[4] = {"LSL", "LSR", "ASR", "ROR"};
 
 char* STACK_BLOCK_SUFFIXS[8] = {
-    "STMED\0", "STMEA", "STMFD", "STMFA", "LDMFA", "LDMFD", "LDMEA", "LDMED",
+    "STMED\0", "STMEA\0", "STMFD\0", "STMFA\0", "LDMFA\0", "LDMFD\0", "LDMEA\0", "LDMED\0",
 };
 char* OTHER_BLOCK_SUFFIXS[8] = {
-    "STMDA", "STMIA", "STMDB", "STMIB", "LDMDA", "LDMIA", "LDMDB", "LDMIB",
+    "STMDA\0", "STMIA\0", "STMDB\0", "STMIB\0", "LDMDA\0", "LDMIA\0", "LDMDB\0", "LDMIB\0",
 };
 
 char* IMMEDIATE_THUMB_OPS[4] = {"MOV", "CMP", "ADD", "SUB"};
