@@ -24,6 +24,7 @@ typedef struct OpFlags {
     uint8_t W : 1;
     uint8_t H : 1;
     uint8_t S : 1;
+    uint8_t N : 1;
 } OpFlags;
 
 typedef struct TokenBuilder {
