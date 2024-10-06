@@ -15,7 +15,8 @@
         "core.h": "c",
         "thumb_decoder.h": "c",
         "instruction_builder.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "assert.h": "c"
     },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"

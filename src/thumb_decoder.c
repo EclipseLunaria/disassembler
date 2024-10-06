@@ -138,7 +138,7 @@ int decode_thumb_transfer_immediate_offset(uint16_t instruction, char* s) {
     reg_t rd = instruction & 0b111;
 
     append_fmt_token(&builder, "%s%s ", L ? "LDR" : "STR", B ? "B" : "");
-
+    append_register(&builder, rd);
     append_fmt_token(&builder, "[R%d, #0x%x]", rb, offset5);
 
     return 0;
@@ -188,6 +188,8 @@ int decode_thumb_sp_relative_transfer(uint16_t instruction, char* s) {
     reg_t rd = (instruction >> 8) & 0b111;
     uint8_t word8 = instruction & 0xFF;
     append_token(&builder, L ? "LDR " : "STR ");
+
+    append_register(&builder, rd);
     append_fmt_token(&builder, "[SP, #0x%x]", word8);
 
     build_instruction(&builder, s);
@@ -232,8 +234,15 @@ int decode_thumb_push_pop_registers(uint16_t instruction, char* s) {
     create_token_builder(&builder);
 
     flag_t L = (instruction >> 11) & 1;
-    flag_t R = (instruction >> 8) & 1;
+    // flag_t R = (instruction >> 8) & 1;
     reg_t rlist = (instruction >> 6) & 0xF;
+
+    append_token(&builder, L ? "PUSH " : "POP ");
+
+    char list_buffer[BUFFER_SIZE];
+    memset(list_buffer, 0, BUFFER_SIZE);
+    build_register_list(rlist, list_buffer);
+    append_token(&builder, list_buffer);
     return 0;
 }
 
@@ -244,6 +253,18 @@ int decode_thumb_block_transfer(uint16_t instruction, char* s) {
     flag_t L = (instruction >> 11) & 1;
     reg_t rb = (instruction >> 8) & 0b111;
     reg_t rlist = instruction & 0xFF;
+
+    append_token(&builder, L ? "LDMIA " : "STMIA ");
+
+    append_fmt_token(&builder, "R%d!", rb);
+
+    char list_buffer[BUFFER_SIZE];
+    memset(list_buffer, 0, BUFFER_SIZE);
+    build_register_list(rlist, list_buffer);
+
+    append_token(&builder, list_buffer);
+
+    build_instruction(&builder, s);
     return 0;
 }
 int decode_thumb_conditional_branch(uint16_t instruction, char* s) {
@@ -286,7 +307,7 @@ int decode_thumb_long_branch_with_link(uint16_t instruction, char* s) {
     TokenBuilder builder;
     create_token_builder(&builder);
 
-    flag_t H = (instruction >> 11) & 1;
+    // flag_t H = (instruction >> 11) & 1;
     uint8_t offset = instruction & 0x7FF;
 
     append_token(&builder, "BL ");

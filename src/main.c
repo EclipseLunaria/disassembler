@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             char ibuf[128];
             memset(ibuf, 0, 128);
 
-            decode_instruction(buffer[i], ibuf);
+            decode_arm_instruction(buffer[i], ibuf);
             char outline[256];
             memset(outline, 0, 256);
 

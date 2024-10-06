@@ -1,6 +1,6 @@
 #include "arm_decoder.h"
 
-int decode_instruction(uint32_t instruction, char* buffer) {
+int decode_arm_instruction(uint32_t instruction, char* buffer) {
     decoder_t decoder = select_decoder(instruction);
 
     if (((instruction >> 28) & 0xF) == 0xF || !decoder) {
@@ -78,13 +78,7 @@ int decode_multiply(uint32_t instruction, char* buffer) {
     reg_t rs = (instruction >> 8) & 0xF;
     reg_t rm = instruction & 0xF;
 
-    char mnemonic_buffer[16];
-    memset(mnemonic_buffer, 0, 16);
-    strcat(mnemonic_buffer, A ? "MLA" : "MUL");
-    strcat(mnemonic_buffer, COND_TYPE_STRS[cond]);
-    strcat(mnemonic_buffer, S ? "S" : "");
-    strcat(mnemonic_buffer, " ");
-    append_token(&builder, mnemonic_buffer);
+    append_fmt_token(&builder, "%s%s%s ", A ? "MLA" : "MUL", COND_TYPE_STRS[cond], S ? "S" : "");
 
     append_register(&builder, rd);
     append_register(&builder, rm);

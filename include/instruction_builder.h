@@ -2,7 +2,7 @@
 #define TOKEN_BUILDER_H
 
 #include "core.h"
-#include <stdarg.h>
+
 
 int create_token_builder(TokenBuilder* b);
 int build_instruction(TokenBuilder* b, char* buffer);
